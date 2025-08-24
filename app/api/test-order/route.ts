@@ -1,56 +1,55 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    console.log("[v0] Testing Amazon order placement...")
-
-    const alpacaApiKey = process.env.ALPACA_API_KEY
-    const alpacaSecretKey = process.env.ALPACA_SECRET_KEY
-
-    if (!alpacaApiKey || !alpacaSecretKey) {
-      throw new Error("Alpaca API credentials not found")
-    }
+    const { symbol, quantity } = await request.json()
 
     const orderData = {
-      symbol: "AMZN",
-      qty: "1",
+      symbol: symbol.toUpperCase(),
+      qty: quantity.toString(),
       side: "buy",
       type: "market",
-      time_in_force: "day",
+      time_in_force: "day"
     }
 
-    console.log("[v0] Placing order:", orderData)
+    console.log("[Test Order API] Placing order:", orderData)
 
-    const response = await fetch("https://paper-api.alpaca.markets/v2/orders", {
+    const orderResponse = await fetch("https://paper-api.alpaca.markets/v2/orders", {
       method: "POST",
       headers: {
-        "APCA-API-KEY-ID": alpacaApiKey,
-        "APCA-API-SECRET-KEY": alpacaSecretKey,
+        "APCA-API-KEY-ID": process.env.ALPACA_API_KEY!,
+        "APCA-API-SECRET-KEY": process.env.ALPACA_SECRET_KEY!,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(orderData),
     })
-
-    const result = await response.json()
-    console.log("[v0] Order response:", result)
-
-    if (!response.ok) {
-      throw new Error(`Order failed: ${result.message || "Unknown error"}`)
+    
+    if (!orderResponse.ok) {
+      const errorText = await orderResponse.text()
+      console.error("[Test Order API] Order failed:", errorText)
+      throw new Error(`Order failed: ${errorText}`)
     }
-
+    
+    const order = await orderResponse.json()
+    console.log("[Test Order API] Order placed successfully:", order)
+    
     return NextResponse.json({
       success: true,
-      message: "Amazon order placed successfully",
-      order: result,
+      order: {
+        id: order.id,
+        symbol: order.symbol,
+        side: order.side,
+        qty: order.qty,
+        type: order.order_type,
+        status: order.status,
+        submitted_at: order.submitted_at
+      }
     })
   } catch (error) {
-    console.error("[v0] Order test error:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    )
+    console.error("Error in test order API:", error)
+    return NextResponse.json({ 
+      error: "Failed to place order",
+      details: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 })
   }
 }
