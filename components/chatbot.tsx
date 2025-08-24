@@ -60,7 +60,7 @@ export default function ChatBot({ context }: ChatBotProps) {
     try {
       console.log("[v0] Sending message to Claude API:", inputValue)
 
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/chat-simple", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -189,7 +189,9 @@ export default function ChatBot({ context }: ChatBotProps) {
                       }`}
                     >
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      <p className="text-xs opacity-60 mt-1">{message.timestamp.toLocaleTimeString()}</p>
+                      <p className="text-xs opacity-60 mt-1">
+                        {typeof window !== 'undefined' ? message.timestamp.toLocaleTimeString() : ''}
+                      </p>
                     </div>
                   </div>
                 </div>
