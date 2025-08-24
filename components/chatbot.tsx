@@ -125,7 +125,7 @@ export default function ChatBot({ context }: ChatBotProps) {
   return (
     <Card
       className={`bg-white/10 backdrop-blur-md border-white/20 text-white flex flex-col transition-all duration-300 ${
-        isMinimized ? "h-16" : "h-full"
+        isMinimized ? "h-16" : "h-full max-h-full overflow-hidden"
       }`}
     >
       <CardHeader className="pb-3 flex-shrink-0">
@@ -161,8 +161,8 @@ export default function ChatBot({ context }: ChatBotProps) {
       </CardHeader>
 
       {!isMinimized && (
-        <CardContent className="flex-1 flex flex-col p-0 min-h-0">
-          <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
+        <CardContent className="flex-1 flex flex-col p-0 min-h-0 overflow-hidden">
+          <ScrollArea className="flex-1 px-4 overflow-y-auto" ref={scrollAreaRef}>
             <div className="space-y-4 pb-4">
               {messages.map((message) => (
                 <div
@@ -217,7 +217,7 @@ export default function ChatBot({ context }: ChatBotProps) {
             </div>
           </ScrollArea>
 
-          <div className="p-4 border-t border-white/20 flex-shrink-0">
+          <div className="p-4 border-t border-white/20 flex-shrink-0 bg-white/5">
             <div className="flex gap-2">
               <Input
                 value={inputValue}

@@ -98,12 +98,12 @@ export default function WaterFuturesAI() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex">
+        <div className="flex-1 flex h-[calc(100vh-64px)]">
           {/* Content */}
-          <div className="flex-1 p-6">{renderContent()}</div>
+          <div className="flex-1 p-6 overflow-y-auto">{renderContent()}</div>
 
           {/* Chatbot Sidebar */}
-          <div className="w-80 border-l border-white/20 bg-white/5 backdrop-blur-sm p-4">
+          <div className="w-80 border-l border-white/20 bg-white/5 backdrop-blur-sm p-4 h-full flex flex-col">
             <ChatBot context={getChatbotContext()} />
           </div>
         </div>
