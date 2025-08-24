@@ -1,24 +1,42 @@
 import { NextResponse } from "next/server"
-import { exec } from "child_process"
-import { promisify } from "util"
-import path from "path"
-
-const execAsync = promisify(exec)
 
 export async function GET() {
   try {
-    const scriptPath = path.join(process.cwd(), "scripts", "get-farmer-activity.py")
-    const { stdout, stderr } = await execAsync(`python ${scriptPath}`)
+    // Fetch activity for Farmer Ted
+    const farmerTedUrl = "https://staging.crossmint.com/api/unstable/wallets/userId:farmerted:evm/activity"
+    
+    const response = await fetch(`${farmerTedUrl}?chain=ethereum-sepolia`, {
+      headers: {
+        "X-API-KEY": process.env.CROSSMINT_API_KEY!,
+      },
+    })
 
-    if (stderr) {
-      console.error("Python script error:", stderr)
-      return NextResponse.json({ error: "Failed to fetch activity" }, { status: 500 })
+    if (!response.ok) {
+      // If Farmer Ted doesn't have activity, try Uncle Sam
+      const uncleSamUrl = "https://staging.crossmint.com/api/unstable/wallets/userId:unclesam:evm/activity"
+      
+      const uncleSamResponse = await fetch(`${uncleSamUrl}?chain=ethereum-sepolia`, {
+        headers: {
+          "X-API-KEY": process.env.CROSSMINT_API_KEY!,
+        },
+      })
+
+      if (uncleSamResponse.ok) {
+        const data = await uncleSamResponse.json()
+        console.log("[Crossmint Activity] Uncle Sam activity:", data)
+        return NextResponse.json(data)
+      }
+
+      // Return empty activity if both fail
+      console.log("[Crossmint Activity] No activity found, returning empty")
+      return NextResponse.json({ activities: [] })
     }
 
-    const result = JSON.parse(stdout)
-    return NextResponse.json(result)
+    const data = await response.json()
+    console.log("[Crossmint Activity] Farmer Ted activity:", data)
+    return NextResponse.json(data)
   } catch (error) {
-    console.error("Error executing activity script:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Error fetching Crossmint activity:", error)
+    return NextResponse.json({ activities: [] })
   }
 }

@@ -174,7 +174,7 @@ export default function TradingDashboard() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Account Balance</CardTitle>
@@ -213,17 +213,6 @@ export default function TradingDashboard() {
               {accountInfo?.portfolio_value ? formatCurrency(accountInfo.portfolio_value) : "No Data"}
             </div>
             <p className="text-xs text-white/60">Total portfolio value</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Positions</CardTitle>
-            <Activity className="h-4 w-4 text-white/60" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{positions.length}</div>
-            <p className="text-xs text-white/60">Open positions</p>
           </CardContent>
         </Card>
       </div>

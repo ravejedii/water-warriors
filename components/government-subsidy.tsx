@@ -116,20 +116,47 @@ export default function GovernmentSubsidy() {
 
       if (activityResponse.ok) {
         const activityData = await activityResponse.json()
-        // Transform Crossmint activity data to our transaction format
-        const formattedTransactions =
-          activityData.activities?.map((activity: any) => ({
-            id: activity.id,
-            type: activity.type === "receive" ? "received" : "sent",
-            amount: Number.parseFloat(activity.amount),
-            from: activity.from || "Unknown",
-            to: activity.to || "Unknown",
-            timestamp: activity.timestamp,
-            status: activity.status,
-            txHash: activity.transactionHash,
-          })) || mockTransactions
-        setTransactions(formattedTransactions)
+        console.log("[Government Subsidy] Activity data:", activityData)
+        
+        // Check if we have events array (real Crossmint format)
+        if (activityData && activityData.events && Array.isArray(activityData.events)) {
+          // Parse the real Crossmint activity format
+          const formattedTransactions = activityData.events.map((event: any) => {
+            // Determine if this is a received transaction (to Farmer Ted)
+            const farmerTedAddress = "0x639a356db809fa45a367bc71a6d766df2e9c6d15".toLowerCase()
+            const uncleSamAddress = "0x732278e9d7a02a746dcf38108da30647cdb91217".toLowerCase()
+            
+            const isReceived = event.to_address?.toLowerCase() === farmerTedAddress
+            const isFromUncleSam = event.from_address?.toLowerCase() === uncleSamAddress
+            
+            return {
+              id: event.transaction_hash,
+              type: isReceived ? "received" : "sent" as const,
+              amount: Number.parseFloat(event.amount || "0"),
+              from: isFromUncleSam ? "Uncle Sam (US Government)" : 
+                    event.from_address ? `${event.from_address.slice(0, 6)}...${event.from_address.slice(-4)}` : "Unknown",
+              to: isReceived ? "Farmer Ted" : 
+                  event.to_address ? `${event.to_address.slice(0, 6)}...${event.to_address.slice(-4)}` : "Unknown",
+              timestamp: new Date(event.timestamp).toISOString(),
+              status: "completed" as const,
+              txHash: event.transaction_hash,
+            }
+          })
+          
+          // Sort by timestamp, most recent first
+          formattedTransactions.sort((a: any, b: any) => 
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          )
+          
+          // Limit to 10 most recent transactions
+          setTransactions(formattedTransactions.slice(0, 10))
+        } else {
+          // No activities found, use mock data
+          console.log("[Government Subsidy] No activities found, using mock data")
+          setTransactions(mockTransactions)
+        }
       } else {
+        console.log("[Government Subsidy] Activity fetch failed, using mock data")
         setTransactions(mockTransactions)
       }
 
