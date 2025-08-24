@@ -219,44 +219,6 @@ export default function TradingDashboard() {
 
       <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
         <CardHeader>
-          <CardTitle>Current Positions</CardTitle>
-          <CardDescription className="text-white/60">Active trading positions from Alpaca</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {connectionStatus === "connected" ? (
-            positions.length > 0 ? (
-              <div className="space-y-4">
-                {positions.map((position, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div>
-                        <p className="font-medium">{position.symbol}</p>
-                        <p className="text-sm text-white/60">
-                          {position.qty} shares • {position.side}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">{formatCurrency(position.market_value)}</p>
-                      <p className={`text-sm ${position.unrealized_pl >= 0 ? "text-green-400" : "text-red-400"}`}>
-                        {position.unrealized_pl >= 0 ? "+" : ""}
-                        {formatCurrency(position.unrealized_pl)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-white/60 text-center py-8">No active positions</p>
-            )
-          ) : (
-            <p className="text-white/60 text-center py-8">Connect to Alpaca to view positions</p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-        <CardHeader>
           <CardTitle>Recent Orders</CardTitle>
           <CardDescription className="text-white/60">Latest transactions from Alpaca</CardDescription>
         </CardHeader>
@@ -306,6 +268,44 @@ export default function TradingDashboard() {
             )
           ) : (
             <p className="text-white/60 text-center py-8">Connect to Alpaca to view orders</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+        <CardHeader>
+          <CardTitle>Current Positions</CardTitle>
+          <CardDescription className="text-white/60">Active trading positions from Alpaca</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {connectionStatus === "connected" ? (
+            positions.length > 0 ? (
+              <div className="space-y-4">
+                {positions.map((position, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <p className="font-medium">{position.symbol}</p>
+                        <p className="text-sm text-white/60">
+                          {position.qty} shares • {position.side}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{formatCurrency(position.market_value)}</p>
+                      <p className={`text-sm ${position.unrealized_pl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                        {position.unrealized_pl >= 0 ? "+" : ""}
+                        {formatCurrency(position.unrealized_pl)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-white/60 text-center py-8">No active positions</p>
+            )
+          ) : (
+            <p className="text-white/60 text-center py-8">Connect to Alpaca to view positions</p>
           )}
         </CardContent>
       </Card>
