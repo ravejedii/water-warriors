@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DollarSign, Wallet, Activity, CheckCircle, RefreshCw, Send, ExternalLink } from "lucide-react"
+import { DollarSign, Wallet, Activity, CheckCircle, RefreshCw, Send, ExternalLink, CloudRain, Droplets } from "lucide-react"
+import { MCPContextManager } from "@/lib/mcp-context"
 
 interface CrossmintTransaction {
   id: string
@@ -36,6 +37,8 @@ export default function GovernmentSubsidy() {
   const [isLoading, setIsLoading] = useState(false)
   const [transferAmount, setTransferAmount] = useState("")
   const [transferInProgress, setTransferInProgress] = useState(false)
+  const [droughtLevel, setDroughtLevel] = useState<"high" | "medium" | "low">("medium")
+  const [totalReceived, setTotalReceived] = useState<number>(0)
 
   const mockTransactions: CrossmintTransaction[] = [
     {
@@ -174,7 +177,31 @@ export default function GovernmentSubsidy() {
 
   useEffect(() => {
     fetchCrossmintData()
+    // Calculate total received from transactions
+    const total = transactions
+      .filter(tx => tx.type === "received" && tx.status === "completed")
+      .reduce((sum, tx) => sum + tx.amount, 0)
+    setTotalReceived(total)
+  }, [transactions])
+
+  useEffect(() => {
+    fetchCrossmintData()
   }, [])
+
+  useEffect(() => {
+    // Update MCP context with drought level
+    const mcpManager = MCPContextManager.getInstance()
+    mcpManager.updateCrossmintContext({
+      balance: usdcBalance || 0,
+      activity: transactions,
+      walletAddress: "0x639A356DB809fA45A367Bc71A6D766dF2e9C6D15"
+    })
+    mcpManager.updateWaterFuturesContext({
+      recommendations: [],
+      marketData: { droughtLevel },
+      weatherAlerts: droughtLevel === "high" ? ["Severe drought conditions"] : []
+    })
+  }, [droughtLevel, usdcBalance, transactions])
 
   const formatUSDC = (amount: number) => {
     return `${amount.toFixed(2)} USDC`
@@ -212,12 +239,28 @@ export default function GovernmentSubsidy() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">USDC Balance (Sepolia)</CardTitle>
-            <Wallet className="h-4 w-4 text-white/60" />
+            <CardTitle className="text-sm font-medium">Drought Level</CardTitle>
+            <CloudRain className={`h-4 w-4 ${
+              droughtLevel === "high" ? "text-red-400" : 
+              droughtLevel === "medium" ? "text-yellow-400" : 
+              "text-blue-400"
+            }`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{usdcBalance !== null ? formatUSDC(usdcBalance) : "Loading..."}</div>
-            <p className="text-xs text-white/60">Farmer Ted's wallet</p>
+            <select
+              value={droughtLevel}
+              onChange={(e) => setDroughtLevel(e.target.value as "high" | "medium" | "low")}
+              className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+            >
+              <option value="high" className="bg-gray-800">High (75¢ subsidy)</option>
+              <option value="medium" className="bg-gray-800">Medium (50¢ subsidy)</option>
+              <option value="low" className="bg-gray-800">Low (25¢ subsidy)</option>
+            </select>
+            <p className="text-xs text-white/60 mt-2">
+              {droughtLevel === "high" ? "Severe drought - $0.75 subsidy" :
+               droughtLevel === "medium" ? "Moderate drought - $0.50 subsidy" :
+               "Mild drought - $0.25 subsidy"}
+            </p>
           </CardContent>
         </Card>
 
@@ -238,7 +281,7 @@ export default function GovernmentSubsidy() {
             <Activity className="h-4 w-4 text-white/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatUSDC(transactions.reduce((sum, tx) => sum + tx.amount, 0))}</div>
+            <div className="text-2xl font-bold">{formatUSDC(totalReceived)}</div>
             <p className="text-xs text-white/60">All-time subsidy payments</p>
           </CardContent>
         </Card>
