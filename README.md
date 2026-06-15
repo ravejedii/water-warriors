@@ -1,211 +1,151 @@
-# 💧 Water Warriors - AI-Powered Water Futures Trading Platform
+<div align="center">
 
-**🏆 Built for Hackathon - Combining Satellite Imagery, Blockchain, and AI for Water Market Innovation**
+# 💧 Water Futures AI
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/lucas-projects-6ad63bd4/v0-no-content)
-[![Built with Next.js](https://img.shields.io/badge/Built%20with-Next.js%2015-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
-[![Powered by Claude](https://img.shields.io/badge/Powered%20by-Claude%203.5-purple?style=for-the-badge)](https://anthropic.com)
+### AI-powered water-scarcity risk management — trading, drought analytics, and blockchain subsidies in one platform.
 
-## 🎯 Project Overview
+[![Next.js](https://img.shields.io/badge/Next.js_15-000?logo=next.js&logoColor=white)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React_19-149ECA?logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Claude](https://img.shields.io/badge/AI-Claude-D97757)](https://www.anthropic.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](./LICENSE)
 
-Water Warriors is an innovative AI-powered platform that democratizes water futures trading by combining real-time market data, satellite-based drought analysis, and blockchain-powered subsidies. Built specifically for farmers and agricultural stakeholders, our platform makes complex water rights trading accessible through natural language AI interactions.
+**[▶ Live Demo](https://water-futures-ai.vercel.app)**  ·  [Features](#-features)  ·  [Architecture](#-architecture)  ·  [Run locally](#-run-locally)
 
-### 🌟 Key Features
+</div>
 
-- **🤖 AI Trading Agent**: Natural language trading powered by Claude 3.5 Sonnet
-- **📊 Real-Time Trading**: Live integration with Alpaca Markets API
-- **🛰️ Satellite Drought Analysis**: GRIDMET data processing via Google Earth Engine
-- **💰 Blockchain Subsidies**: Ethereum Sepolia USDC transfers via Crossmint
-- **🌧️ Drought-Based Pricing**: Dynamic subsidy system ($0.25-$0.75 based on severity)
-- **📈 Predictive Analytics**: ML models trained on NQH2O water index data
-
-## 🛰️ Satellite Imagery & Drought Analysis
-
-### 📓 Google Colab Notebook
-
-**[NQH2O_Prediction_GridMET (2).ipynb](./NQH2O_Prediction_GridMET%20(2).ipynb)**
-
-This Jupyter notebook contains our advanced drought analysis pipeline that:
-
-1. **Fetches Real-Time Drought Data** from GRIDMET via Google Earth Engine
-2. **Processes 5 California Water Basins**:
-   - Central Basin
-   - Chino Basin
-   - Main San Gabriel Basin
-   - Mojave Basin
-   - California Surface Water (Statewide)
-3. **Extracts 85+ Drought Indicators**:
-   - SPI (Standardized Precipitation Index)
-   - SPEI (Standardized Precipitation-Evapotranspiration Index)
-   - PDSI (Palmer Drought Severity Index)
-   - EDDI (Evaporative Demand Drought Index)
-4. **Trains ML Models** for NQH2O price prediction with:
-   - Ridge, Lasso, ElasticNet
-   - Random Forest, Gradient Boosting
-   - Ensemble methods achieving R² > 0.95 on validation
-
-### 🔬 Technical Highlights
-
-- **497 weekly observations** from 2018-2025
-- **320 engineered features** including drought lags and composites
-- **Real drought patterns** from 2020-2022 California drought
-- **Feature importance analysis** showing drought indicators drive 44% of price variance
-
-## 🏗️ Architecture
-
-### Tech Stack
-
-- **Frontend**: Next.js 15, React 19, TypeScript, TailwindCSS
-- **AI Integration**: Anthropic Claude 3.5 Sonnet, Vercel AI SDK
-- **Trading**: Alpaca Markets API (paper trading)
-- **Blockchain**: Crossmint API, Ethereum Sepolia, USDC
-- **Data Science**: Python, Google Earth Engine, scikit-learn
-- **MCP Servers**: Custom Python servers for Alpaca & Crossmint
-
-### System Architecture
-
-```
-┌─────────────────────────────────────────┐
-│          Water Warriors UI              │
-│    (Next.js + React + TypeScript)       │
-└────────────┬────────────────────────────┘
-             │
-             ▼
-┌─────────────────────────────────────────┐
-│        AI Chat Interface                │
-│    (Claude 3.5 Sonnet via API)         │
-└────────────┬────────────────────────────┘
-             │
-        ┌────┴────┬─────────┬────────┐
-        ▼         ▼         ▼        ▼
-┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
-│ Alpaca   │ │Crossmint │ │ GRIDMET  │ │  NQH2O   │
-│ Trading  │ │Blockchain│ │ Drought  │ │  Index   │
-│   API    │ │   API    │ │   Data   │ │   Data   │
-└──────────┘ └──────────┘ └──────────┘ └──────────┘
-```
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18+
-- Python 3.9+
-- API Keys for:
-  - Anthropic Claude
-  - Alpaca Markets
-  - Crossmint
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/water-warriors
-cd water-warriors
-
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env
-# Add your API keys to .env
-
-# Start MCP servers (in separate terminals)
-python scripts/alpaca_mcp_server.py
-python scripts/crossmint_mcp_server.py
-
-# Run the development server
-npm run dev
-```
-
-Visit `http://localhost:3000` to see the application.
-
-## 💼 Trading Features
-
-### Natural Language Trading
-Simply tell the AI what you want to do:
-- "Buy 5 shares of Tesla"
-- "Check my current positions"
-- "What's my account balance?"
-- "Show me recent orders"
-
-### Drought-Based Subsidies
-The platform automatically adjusts subsidies based on drought severity:
-- **High Drought**: $0.75 subsidy
-- **Medium Drought**: $0.50 subsidy  
-- **Low Drought**: $0.25 subsidy
-
-Users can claim subsidies through the AI: "Check subsidy" or "Claim subsidy"
-
-## 📊 Data Science Pipeline
-
-Our ML pipeline processes:
-1. **Historical NQH2O water index prices** (2018-2025)
-2. **GRIDMET satellite drought data** across 5 basins
-3. **85 drought indicators** with temporal lags
-4. **Feature engineering** creating 320+ features
-5. **Model ensemble** combining 5 algorithms
-
-Results:
-- **Test RMSE**: $86.82
-- **Validation R²**: 0.95
-- **Drought features**: 44% of model importance
-
-## 🔐 Security & Compliance
-
-- Paper trading mode for safe testing
-- Secure API key management
-- Blockchain transactions on test network (Sepolia)
-- No real money movements during development
-
-## 🎯 Use Cases
-
-1. **Farmers**: Hedge against water price volatility
-2. **Agricultural Funds**: Manage water risk exposure
-3. **Government Agencies**: Monitor and subsidize during droughts
-4. **Researchers**: Access integrated water market data
-
-## 🏆 Hackathon Innovation
-
-This project demonstrates:
-- **Cross-domain Integration**: Satellite + Blockchain + AI + Trading
-- **Real-world Impact**: Addressing California water crisis
-- **Technical Excellence**: Production-ready architecture
-- **User Experience**: Natural language interface for complex trading
-
-## 📈 Future Roadmap
-
-- [ ] Real-time satellite imagery processing
-- [ ] Smart contract automation for subsidies
-- [ ] Mobile application
-- [ ] Multi-region water market support
-- [ ] Advanced risk analytics dashboard
-- [ ] Integration with weather forecasting APIs
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **GRIDMET** for drought data
-- **Alpaca Markets** for trading infrastructure
-- **Crossmint** for blockchain integration
-- **Anthropic** for Claude AI
-- **Google Earth Engine** for satellite data processing
-
-## 📞 Contact
-
-For questions about this hackathon project:
-- GitHub: [Water Warriors Repository](https://github.com/yourusername/water-warriors)
-- Demo: [Live Demo](https://vercel.com/lucas-projects-6ad63bd4/v0-no-content)
+<p align="center">
+  <img src="docs/screenshots/desktop-trading.png" alt="Water Futures AI — trading dashboard" width="100%" />
+</p>
 
 ---
 
-**Built with ❤️ for the Hackathon by Team Water Warriors**
+## Overview
 
-*Turning drought data into actionable trading insights through AI*
+Water is becoming a traded commodity. Water Futures AI is a single, polished interface where an
+agricultural stakeholder can **monitor water-sector markets, claim drought-triggered subsidies, review
+ML-driven futures signals, and do it all through natural language** with an AI assistant.
+
+It integrates four domains that rarely meet in one place — **markets, climate data, blockchain payments,
+and LLMs** — and ships with a design decision that makes it genuinely usable by anyone:
+
+> **It works with zero configuration.** Open the live demo and every feature is explorable with realistic
+> sample data, clearly labeled. Want real data? Add your own API keys in-app (stored only in your browser)
+> and any feature flips to live. No hidden fallbacks, no broken empty states.
+
+This started as a hackathon project and was refactored into a portfolio-grade application: responsive on
+mobile and desktop, type-safe, and honest about what's demo vs. live.
+
+## ✨ Features
+
+| | |
+|---|---|
+| 🤖 **AI assistant** | Natural-language help and commands (`buy 5 AWK`, `check my balance`, `claim subsidy`), powered by Claude when a key is connected. |
+| 📈 **Trading dashboard** | Account value, positions, and order history via the Alpaca paper-trading API. |
+| 💸 **Drought subsidies** | USDC transfers on Ethereum Sepolia via Crossmint, with subsidy rates that scale to drought severity. |
+| 🛰️ **Futures analysis** | Trading signals derived from a drought-prediction ML pipeline (NQH2O index + GRIDMET indicators). |
+| 🎚️ **Demo / Live modes** | Transparent demo data by default; bring-your-own-key to go live, with a clear status indicator. |
+| 📱 **Responsive + themed** | Works on phone and desktop, with light and dark themes. |
+
+<p align="center">
+  <img src="docs/screenshots/mobile-trading.png" alt="Mobile view" width="32%" />
+  <img src="docs/screenshots/desktop-chat.png" alt="AI assistant" width="64%" />
+</p>
+
+## 🧭 Demo Mode & Bring-Your-Own-Key
+
+The defining design decision of this project. Credentials are resolved on the server with a clear precedence:
+
+```
+per-request header (your key, in-browser)  →  server env var  →  built-in demo data
+```
+
+- **No keys** → realistic demo data, every screen fully populated and labeled **“Demo data.”**
+- **Your keys** (entered in the in-app Settings panel) → that feature switches to **live**. Keys live only in
+  your browser's `localStorage`, are sent per-request, and are **never persisted server-side or logged.**
+- **Server env vars** → for a private deployment where the owner supplies the keys.
+
+This means the public demo always looks complete to a visitor, while remaining honest and secure.
+
+## 🏗️ Architecture
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                Next.js App Router (React 19, TS)               │
+│   Header · Tabs · Theme · Settings (BYOK) · Floating AI chat   │
+└───────────────┬───────────────────────────────┬───────────────┘
+                │ fetch() with credential headers │
+                ▼                                 ▼
+┌──────────────────────────────┐   ┌──────────────────────────────┐
+│  Route handlers (app/api/*)  │   │   Credential resolution        │
+│  per-request → env → demo    │──▶│  header → env → demo (flag)    │
+└───────┬─────────┬─────────┬──┘   └──────────────────────────────┘
+        ▼         ▼         ▼
+   ┌────────┐ ┌─────────┐ ┌────────┐
+   │ Alpaca │ │Crossmint│ │ Claude │   (live only when a key is present)
+   │ paper  │ │ Sepolia │ │  API   │
+   └────────┘ └─────────┘ └────────┘
+```
+
+**Tech stack:** Next.js 15 · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui · Radix UI ·
+`@anthropic-ai/sdk` · Alpaca & Crossmint REST APIs.
+
+## 🛰️ The data-science pipeline
+
+The futures-analysis view is grounded in a real research notebook
+([`research/notebooks/NQH2O_Prediction_GridMET.ipynb`](research/notebooks/NQH2O_Prediction_GridMET.ipynb)):
+
+- **497 weekly NQH2O** water-index observations (2018–2025)
+- **85+ GRIDMET drought indicators** (SPI, SPEI, PDSI, EDDI) across five California water basins
+- Feature engineering into 300+ lagged/composite features, with an ensemble of regression models
+
+Reference Python MCP servers for the Alpaca and Crossmint integrations live in
+[`research/mcp-servers/`](research/mcp-servers/).
+
+## 🚀 Run locally
+
+**Prerequisites:** Node.js 18+.
+
+```bash
+git clone https://github.com/ravejedii/water-warriors.git
+cd water-warriors
+npm install
+npm run dev          # http://localhost:3000
+```
+
+That's it — the app runs in demo mode out of the box. To enable live data, either click **Settings** in the
+app and paste your own keys, or copy `.env.example` to `.env.local` and fill in the values you have:
+
+```bash
+cp .env.example .env.local
+```
+
+All keys are optional and independent; provide only the ones you want to go live.
+
+## ▲ Deploy
+
+This is a standard Next.js app and deploys to [Vercel](https://vercel.com) with no extra configuration:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ravejedii/water-warriors)
+
+The deployment runs in demo mode unless you add the optional environment variables from `.env.example` in
+the Vercel project settings.
+
+## 📁 Project structure
+
+```
+app/            App Router pages, layout, and API route handlers
+components/     UI components (dashboards, chatbot, settings) + shadcn/ui primitives
+lib/            Demo data, client BYOK context, server credential resolution
+research/       ML notebook + reference MCP servers
+docs/           Screenshots
+```
+
+See [CLAUDE.md](./CLAUDE.md) for an architecture deep-dive.
+
+## 📜 License
+
+[MIT](./LICENSE) © [ravejedii](https://github.com/ravejedii)
+
+<div align="center"><sub>Turning drought data into actionable insight.</sub></div>

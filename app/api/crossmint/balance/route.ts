@@ -1,24 +1,27 @@
 import { NextResponse } from "next/server"
-import { exec } from "child_process"
-import { promisify } from "util"
-import path from "path"
+import { resolveCrossmintKey } from "@/lib/server-credentials"
+import { DEMO_WALLETS, demoCrossmintBalance } from "@/lib/demo-data"
 
-const execAsync = promisify(exec)
+const CROSSMINT_BASE = "https://staging.crossmint.com/api/2025-06-09"
 
-export async function GET() {
+export async function GET(request: Request) {
+  const apiKey = resolveCrossmintKey(request)
+  if (!apiKey) {
+    const usdc = demoCrossmintBalance.balances.find((b) => b.token === "usdc")?.amount ?? "0"
+    return NextResponse.json({ demo: true, balanceUsdc: Number.parseFloat(usdc) })
+  }
+
   try {
-    const scriptPath = path.join(process.cwd(), "scripts", "get-farmer-balance.py")
-    const { stdout, stderr } = await execAsync(`python ${scriptPath}`)
-
-    if (stderr) {
-      console.error("Python script error:", stderr)
-      return NextResponse.json({ error: "Failed to fetch balance" }, { status: 500 })
-    }
-
-    const result = JSON.parse(stdout)
-    return NextResponse.json(result)
+    const url = `${CROSSMINT_BASE}/wallets/${DEMO_WALLETS.farmerTed}/tokens?chains=ethereum-sepolia`
+    const response = await fetch(url, { headers: { "x-api-key": apiKey } })
+    if (!response.ok) throw new Error(`Crossmint API error: ${response.status}`)
+    const data = await response.json()
+    const usdc = data?.balances?.find((b: any) => b.token === "usdc")?.amount ?? "0"
+    return NextResponse.json({ demo: false, balanceUsdc: Number.parseFloat(usdc) })
   } catch (error) {
-    console.error("Error executing balance script:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to fetch Crossmint balance" },
+      { status: 502 },
+    )
   }
 }

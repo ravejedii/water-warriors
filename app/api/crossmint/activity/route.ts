@@ -1,42 +1,33 @@
 import { NextResponse } from "next/server"
+import { resolveCrossmintKey } from "@/lib/server-credentials"
+import { type CrossmintEvent, demoCrossmintEvents } from "@/lib/demo-data"
 
-export async function GET() {
+const CROSSMINT_ACTIVITY_URL =
+  "https://staging.crossmint.com/api/unstable/wallets/userId:farmerted:evm/activity?chain=ethereum-sepolia"
+
+export async function GET(request: Request) {
+  const apiKey = resolveCrossmintKey(request)
+  if (!apiKey) {
+    return NextResponse.json({ demo: true, events: demoCrossmintEvents })
+  }
+
   try {
-    // Fetch activity for Farmer Ted
-    const farmerTedUrl = "https://staging.crossmint.com/api/unstable/wallets/userId:farmerted:evm/activity"
-    
-    const response = await fetch(`${farmerTedUrl}?chain=ethereum-sepolia`, {
-      headers: {
-        "X-API-KEY": process.env.CROSSMINT_API_KEY!,
-      },
-    })
-
-    if (!response.ok) {
-      // If Farmer Ted doesn't have activity, try Uncle Sam
-      const uncleSamUrl = "https://staging.crossmint.com/api/unstable/wallets/userId:unclesam:evm/activity"
-      
-      const uncleSamResponse = await fetch(`${uncleSamUrl}?chain=ethereum-sepolia`, {
-        headers: {
-          "X-API-KEY": process.env.CROSSMINT_API_KEY!,
-        },
-      })
-
-      if (uncleSamResponse.ok) {
-        const data = await uncleSamResponse.json()
-        console.log("[Crossmint Activity] Uncle Sam activity:", data)
-        return NextResponse.json(data)
-      }
-
-      // Return empty activity if both fail
-      console.log("[Crossmint Activity] No activity found, returning empty")
-      return NextResponse.json({ activities: [] })
-    }
-
+    const response = await fetch(CROSSMINT_ACTIVITY_URL, { headers: { "X-API-KEY": apiKey } })
+    if (!response.ok) throw new Error(`Crossmint API error: ${response.status}`)
     const data = await response.json()
-    console.log("[Crossmint Activity] Farmer Ted activity:", data)
-    return NextResponse.json(data)
+
+    const events: CrossmintEvent[] = (data?.events ?? []).map((e: any) => ({
+      transaction_hash: e.transaction_hash,
+      from_address: e.from_address,
+      to_address: e.to_address,
+      amount: e.amount ?? "0",
+      timestamp: e.timestamp,
+    }))
+    return NextResponse.json({ demo: false, events })
   } catch (error) {
-    console.error("Error fetching Crossmint activity:", error)
-    return NextResponse.json({ activities: [] })
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to fetch Crossmint activity" },
+      { status: 502 },
+    )
   }
 }

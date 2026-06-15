@@ -1,31 +1,49 @@
 import { NextResponse } from "next/server"
-import { exec } from "child_process"
-import { promisify } from "util"
-import path from "path"
+import { resolveCrossmintKey } from "@/lib/server-credentials"
+import { DEMO_WALLETS } from "@/lib/demo-data"
 
-const execAsync = promisify(exec)
+const TRANSFER_URL =
+  "https://staging.crossmint.com/api/2025-06-09/wallets/userId:unclesam:evm/tokens/ethereum-sepolia:usdc/transfers"
 
 export async function POST(request: Request) {
+  const apiKey = resolveCrossmintKey(request)
+  const { amount, recipient = DEMO_WALLETS.farmerTed } = await request.json()
+
+  if (!amount || Number(amount) <= 0) {
+    return NextResponse.json({ error: "A positive amount is required" }, { status: 400 })
+  }
+
+  // Demo mode: simulate a successful USDC transfer.
+  if (!apiKey) {
+    return NextResponse.json({
+      demo: true,
+      success: true,
+      amount: Number(amount),
+      recipient,
+      transactionId: `demo-tx-${Date.now()}`,
+    })
+  }
+
   try {
-    const { amount } = await request.json()
+    const response = await fetch(TRANSFER_URL, {
+      method: "POST",
+      headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({ recipient, amount: String(amount) }),
+    })
+    const result = await response.json()
+    if (!response.ok) throw new Error(result?.message || `Crossmint API error: ${response.status}`)
 
-    if (!amount || amount <= 0) {
-      return NextResponse.json({ error: "Invalid amount" }, { status: 400 })
-    }
-
-    // Modify the Python script to accept amount parameter
-    const scriptPath = path.join(process.cwd(), "scripts", "execute-transfer.py")
-    const { stdout, stderr } = await execAsync(`python ${scriptPath} ${amount}`)
-
-    if (stderr) {
-      console.error("Python script error:", stderr)
-      return NextResponse.json({ error: "Failed to execute transfer" }, { status: 500 })
-    }
-
-    const result = JSON.parse(stdout)
-    return NextResponse.json(result)
+    return NextResponse.json({
+      demo: false,
+      success: true,
+      amount: Number(amount),
+      recipient,
+      transactionId: result.id ?? `tx-${Date.now()}`,
+    })
   } catch (error) {
-    console.error("Error executing transfer script:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Transfer failed" },
+      { status: 502 },
+    )
   }
 }

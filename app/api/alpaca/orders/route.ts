@@ -1,101 +1,90 @@
 import { NextResponse } from "next/server"
+import { ALPACA_PAPER_BASE, alpacaHeaders, resolveAlpacaCredentials } from "@/lib/server-credentials"
+import { demoOrders, type AlpacaOrder } from "@/lib/demo-data"
 
-export async function GET() {
+function normalizeOrder(o: any): AlpacaOrder {
+  return {
+    id: o.id,
+    symbol: o.symbol,
+    qty: Number.parseFloat(o.qty),
+    side: o.side,
+    order_type: o.order_type || o.type,
+    filled_at: o.filled_at,
+    filled_avg_price: o.filled_avg_price ? Number.parseFloat(o.filled_avg_price) : null,
+    status: o.status,
+    created_at: o.created_at,
+    submitted_at: o.submitted_at,
+  }
+}
+
+export async function GET(request: Request) {
+  const creds = resolveAlpacaCredentials(request)
+  if (!creds) {
+    return NextResponse.json({ demo: true, orders: demoOrders })
+  }
+
   try {
-    const response = await fetch("https://paper-api.alpaca.markets/v2/orders?status=all&limit=50", {
-      headers: {
-        "APCA-API-KEY-ID": process.env.ALPACA_API_KEY!,
-        "APCA-API-SECRET-KEY": process.env.ALPACA_SECRET_KEY!,
-      },
+    const response = await fetch(`${ALPACA_PAPER_BASE}/orders?status=all&limit=20`, {
+      headers: alpacaHeaders(creds),
     })
-
-    if (!response.ok) {
-      throw new Error(`Alpaca API error: ${response.status}`)
-    }
-
-    const orders = await response.json()
-
-    const ordersArray = Array.isArray(orders) ? orders : []
-
-    const formattedOrders = ordersArray.map((order: any) => ({
-      id: order.id,
-      client_order_id: order.client_order_id,
-      created_at: order.created_at,
-      updated_at: order.updated_at,
-      submitted_at: order.submitted_at,
-      filled_at: order.filled_at,
-      expired_at: order.expired_at,
-      canceled_at: order.canceled_at,
-      failed_at: order.failed_at,
-      replaced_at: order.replaced_at,
-      replaced_by: order.replaced_by,
-      replaces: order.replaces,
-      asset_id: order.asset_id,
-      symbol: order.symbol,
-      asset_class: order.asset_class,
-      notional: order.notional,
-      qty: order.qty,
-      filled_qty: order.filled_qty,
-      filled_avg_price: order.filled_avg_price,
-      order_class: order.order_class,
-      order_type: order.order_type,
-      type: order.type,
-      side: order.side,
-      time_in_force: order.time_in_force,
-      limit_price: order.limit_price,
-      stop_price: order.stop_price,
-      status: order.status,
-      extended_hours: order.extended_hours,
-      legs: order.legs,
-      trail_percent: order.trail_percent,
-      trail_price: order.trail_price,
-      hwm: order.hwm,
-      commission: order.commission,
-    }))
-
-    console.log("[v0] Alpaca orders fetched:", formattedOrders.length, "orders")
-    return NextResponse.json(formattedOrders)
+    if (!response.ok) throw new Error(`Alpaca API error: ${response.status}`)
+    const raw = await response.json()
+    const orders = (Array.isArray(raw) ? raw : []).map(normalizeOrder)
+    return NextResponse.json({ demo: false, orders })
   } catch (error) {
-    console.error("Error fetching Alpaca orders:", error)
-    return NextResponse.json({ error: "Failed to fetch orders from Alpaca API" }, { status: 500 })
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to fetch orders from Alpaca" },
+      { status: 502 },
+    )
   }
 }
 
 export async function POST(request: Request) {
+  const creds = resolveAlpacaCredentials(request)
+  const body = await request.json()
+  const { symbol, qty, side = "buy", type = "market", limit_price } = body
+
+  if (!symbol || !qty) {
+    return NextResponse.json({ error: "symbol and qty are required" }, { status: 400 })
+  }
+
+  // Demo mode: simulate an accepted order without touching any broker.
+  if (!creds) {
+    const order: AlpacaOrder = {
+      id: `demo-ord-${Date.now()}`,
+      symbol: String(symbol).toUpperCase(),
+      qty: Number(qty),
+      side,
+      order_type: type,
+      filled_at: null,
+      filled_avg_price: null,
+      status: "accepted",
+      created_at: new Date().toISOString(),
+      submitted_at: new Date().toISOString(),
+    }
+    return NextResponse.json({ demo: true, order })
+  }
+
   try {
-    const { symbol, qty, side, type, time_in_force, limit_price } = await request.json()
-
-    const orderRequest = {
-      symbol: symbol,
-      qty: qty,
-      side: side,
-      type: type,
-      time_in_force: time_in_force || "day",
-      client_order_id: `water_futures_${Date.now()}`,
-      ...(limit_price && { limit_price: limit_price }),
-    }
-
-    const response = await fetch("https://paper-api.alpaca.markets/v2/orders", {
+    const response = await fetch(`${ALPACA_PAPER_BASE}/orders`, {
       method: "POST",
-      headers: {
-        "APCA-API-KEY-ID": process.env.ALPACA_API_KEY!,
-        "APCA-API-SECRET-KEY": process.env.ALPACA_SECRET_KEY!,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(orderRequest),
+      headers: alpacaHeaders(creds),
+      body: JSON.stringify({
+        symbol: String(symbol).toUpperCase(),
+        qty: String(qty),
+        side,
+        type,
+        time_in_force: "day",
+        ...(type === "limit" && limit_price ? { limit_price } : {}),
+      }),
     })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Alpaca API error: ${response.status} - ${errorText}`)
-    }
-
-    const order = await response.json()
-
-    console.log("[v0] Alpaca order placed:", order.id)
-    return NextResponse.json(order)
+    if (!response.ok) throw new Error(`Alpaca API error: ${await response.text()}`)
+    const order = normalizeOrder(await response.json())
+    return NextResponse.json({ demo: false, order })
   } catch (error) {
-    console.error("Error placing Alpaca order:", error)
-    return NextResponse.json({ error: "Failed to place order with Alpaca API" }, { status: 500 })
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to place order with Alpaca" },
+      { status: 502 },
+    )
   }
 }

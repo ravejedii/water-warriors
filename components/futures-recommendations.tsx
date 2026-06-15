@@ -1,478 +1,205 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { AlertTriangle, BarChart3, Brain, CloudRain, Droplets, ThermometerSun, TrendingUp } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { TrendingUp, AlertTriangle, RefreshCw, BarChart3, Brain, Droplets, ThermometerSun } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-interface PriceRecommendation {
-  id: string
+/*
+  This view illustrates how the ML pipeline (see research/notebooks) surfaces
+  trading signals. The figures below are representative sample outputs, clearly
+  labeled as such — they are not live market data.
+*/
+
+interface Recommendation {
   contract: string
   action: "BUY" | "SELL" | "HOLD"
-  currentPrice: number
-  targetPrice: number
+  current: number
+  target: number
   confidence: number
   strategy: string
   reasoning: string
-  riskLevel: "LOW" | "MEDIUM" | "HIGH"
+  risk: "LOW" | "MEDIUM" | "HIGH"
   timeframe: string
 }
 
-interface MarketData {
-  droughtIndex: number
-  droughtLevel: "Normal" | "Moderate" | "Severe" | "Extreme"
-  temperature: number
-  precipitation: number
-  reservoirLevels: number
-  marketSentiment: "Bullish" | "Bearish" | "Neutral"
+const RECOMMENDATIONS: Recommendation[] = [
+  {
+    contract: "NQH2O · Q1",
+    action: "BUY",
+    current: 498.5,
+    target: 525.0,
+    confidence: 87,
+    strategy: "Drought-severity hedge",
+    reasoning: "Models project a 23% rise in drought severity over 30 days from GRIDMET indicators.",
+    risk: "MEDIUM",
+    timeframe: "2–4 weeks",
+  },
+  {
+    contract: "NQH2O · Q2",
+    action: "SELL",
+    current: 512.75,
+    target: 485.0,
+    confidence: 72,
+    strategy: "Seasonal correction",
+    reasoning: "Historical Q1 patterns show a ~15% correction; current conditions look overbought.",
+    risk: "LOW",
+    timeframe: "1–2 weeks",
+  },
+  {
+    contract: "NQH2O · Q3",
+    action: "HOLD",
+    current: 535.25,
+    target: 540.0,
+    confidence: 65,
+    strategy: "Range trading",
+    reasoning: "Price consolidating in the $530–$545 band; await a breakout signal.",
+    risk: "LOW",
+    timeframe: "3–5 days",
+  },
+]
+
+const MARKET = [
+  { label: "Drought Index", value: "2.8", hint: "Moderate", icon: Droplets },
+  { label: "Avg. Temperature", value: "78.5°F", hint: "Regional", icon: ThermometerSun },
+  { label: "Reservoir Levels", value: "67.3%", hint: "Of capacity", icon: BarChart3 },
+  { label: "Sentiment", value: "Bullish", hint: "Model assessment", icon: Brain },
+]
+
+const SIGNALS = {
+  bullish: [
+    "Drought severity rising in key agricultural basins",
+    "Reservoir levels ~15% below seasonal averages",
+    "Climate models indicate an extended dry period",
+  ],
+  risks: [
+    "Regulatory changes in water-allocation policy",
+    "Unexpected precipitation events",
+    "Volatility from speculative positioning",
+  ],
 }
 
-interface WeatherAlert {
-  id: string
-  type: "drought" | "flood" | "temperature" | "precipitation"
-  severity: "LOW" | "MEDIUM" | "HIGH"
-  title: string
-  description: string
-  impact: string
-  region: string
+const actionColor: Record<Recommendation["action"], string> = {
+  BUY: "bg-success text-white",
+  SELL: "bg-destructive text-white",
+  HOLD: "bg-warning text-black",
+}
+const riskColor: Record<Recommendation["risk"], string> = {
+  LOW: "text-success",
+  MEDIUM: "text-warning",
+  HIGH: "text-destructive",
 }
 
 export default function FuturesRecommendations() {
-  const [recommendations, setRecommendations] = useState<PriceRecommendation[]>([])
-  const [marketData, setMarketData] = useState<MarketData | null>(null)
-  const [weatherAlerts, setWeatherAlerts] = useState<WeatherAlert[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
-
-  const mockRecommendations: PriceRecommendation[] = [
-    {
-      id: "1",
-      contract: "NQH25",
-      action: "BUY",
-      currentPrice: 498.5,
-      targetPrice: 525.0,
-      confidence: 87,
-      strategy: "Drought Severity Hedging",
-      reasoning:
-        "AI models predict 23% increase in drought severity over next 30 days based on NOAA data and satellite imagery analysis.",
-      riskLevel: "MEDIUM",
-      timeframe: "2-4 weeks",
-    },
-    {
-      id: "2",
-      contract: "NQM25",
-      action: "SELL",
-      currentPrice: 512.75,
-      targetPrice: 485.0,
-      confidence: 72,
-      strategy: "Seasonal Correction",
-      reasoning:
-        "Historical patterns show 15% price correction typically occurs in Q1. Current overbought conditions support this thesis.",
-      riskLevel: "LOW",
-      timeframe: "1-2 weeks",
-    },
-    {
-      id: "3",
-      contract: "NQU25",
-      action: "HOLD",
-      currentPrice: 535.25,
-      targetPrice: 540.0,
-      confidence: 65,
-      strategy: "Range Trading",
-      reasoning: "Price consolidating in $530-$545 range. Wait for clear breakout signal before taking position.",
-      riskLevel: "LOW",
-      timeframe: "3-5 days",
-    },
-  ]
-
-  const mockMarketData: MarketData = {
-    droughtIndex: 2.8,
-    droughtLevel: "Moderate",
-    temperature: 78.5,
-    precipitation: 0.12,
-    reservoirLevels: 67.3,
-    marketSentiment: "Bullish",
-  }
-
-  const mockWeatherAlerts: WeatherAlert[] = [
-    {
-      id: "1",
-      type: "drought",
-      severity: "MEDIUM",
-      title: "Drought Conditions Intensifying",
-      description: "Central Valley showing increased drought stress indicators",
-      impact: "Water futures likely to trend upward 8-12% over next month",
-      region: "California Central Valley",
-    },
-    {
-      id: "2",
-      type: "temperature",
-      severity: "HIGH",
-      title: "Extreme Heat Wave Forecast",
-      description: "Temperatures expected to exceed 105°F for 7+ consecutive days",
-      impact: "Increased irrigation demand could drive prices up 15-20%",
-      region: "Southwest US",
-    },
-    {
-      id: "3",
-      type: "precipitation",
-      severity: "LOW",
-      title: "Below Average Rainfall",
-      description: "Precipitation 35% below seasonal averages",
-      impact: "Moderate upward pressure on water futures pricing",
-      region: "Pacific Northwest",
-    },
-  ]
-
-  const fetchAIRecommendations = async () => {
-    setIsLoading(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // TODO: Replace with actual AI model API calls
-      // const aiResponse = await fetch('/api/ai/water-futures-analysis')
-
-      setRecommendations(mockRecommendations)
-      setMarketData(mockMarketData)
-      setWeatherAlerts(mockWeatherAlerts)
-      setLastUpdated(new Date())
-    } catch (error) {
-      console.error("Error fetching AI recommendations:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchAIRecommendations()
-  }, [])
-
-  const getDroughtColor = (level: string) => {
-    switch (level) {
-      case "Normal":
-        return "text-green-400 bg-green-500/20 border-green-500/30"
-      case "Moderate":
-        return "text-yellow-400 bg-yellow-500/20 border-yellow-500/30"
-      case "Severe":
-        return "text-orange-400 bg-orange-500/20 border-orange-500/30"
-      case "Extreme":
-        return "text-red-400 bg-red-500/20 border-red-500/30"
-      default:
-        return "text-gray-400 bg-gray-500/20 border-gray-500/30"
-    }
-  }
-
-  const getActionColor = (action: string) => {
-    switch (action) {
-      case "BUY":
-        return "bg-green-600"
-      case "SELL":
-        return "bg-red-600"
-      case "HOLD":
-        return "bg-yellow-600"
-      default:
-        return "bg-gray-600"
-    }
-  }
-
-  const getRiskColor = (risk: string) => {
-    switch (risk) {
-      case "LOW":
-        return "text-green-400"
-      case "MEDIUM":
-        return "text-yellow-400"
-      case "HIGH":
-        return "text-red-400"
-      default:
-        return "text-gray-400"
-    }
-  }
-
-  const formatPrice = (price: number) => `$${price.toFixed(2)}`
-  const formatPercentage = (value: number) => `${value.toFixed(1)}%`
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Futures Price Recommendations</h2>
-          <p className="text-white/80">AI-powered water futures trading recommendations and market analysis</p>
+          <h2 className="text-2xl font-bold tracking-tight">Futures Analysis</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Drought-driven signals from the NQH2O prediction pipeline.
+          </p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-xs text-white/60">Last Updated</p>
-            <p className="text-sm text-white">{lastUpdated.toLocaleTimeString()}</p>
-          </div>
-          <Button
-            onClick={fetchAIRecommendations}
-            disabled={isLoading}
-            variant="outline"
-            className="border-white/20 text-white hover:bg-white/10 bg-transparent"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-            Refresh AI Analysis
-          </Button>
-        </div>
+        <Badge variant="secondary">Illustrative sample</Badge>
       </div>
 
-      {/* Market Overview Cards */}
-      {marketData && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {MARKET.map((m) => (
+          <Card key={m.label} className="glass">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Drought Index</CardTitle>
-              <Droplets className="h-4 w-4 text-white/60" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">{m.label}</CardTitle>
+              <m.icon className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{marketData.droughtIndex.toFixed(1)}</div>
-              <p className={`text-xs ${getDroughtColor(marketData.droughtLevel).split(" ")[0]}`}>
-                {marketData.droughtLevel} conditions
-              </p>
+              <div className="text-2xl font-bold">{m.value}</div>
+              <p className="mt-1 text-xs text-muted-foreground">{m.hint}</p>
             </CardContent>
           </Card>
+        ))}
+      </div>
 
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Temperature</CardTitle>
-              <ThermometerSun className="h-4 w-4 text-white/60" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{marketData.temperature}°F</div>
-              <p className="text-xs text-white/60">Regional average</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Reservoir Levels</CardTitle>
-              <BarChart3 className="h-4 w-4 text-white/60" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatPercentage(marketData.reservoirLevels)}</div>
-              <p className="text-xs text-white/60">Of capacity</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Market Sentiment</CardTitle>
-              <Brain className="h-4 w-4 text-white/60" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-400">{marketData.marketSentiment}</div>
-              <p className="text-xs text-white/60">AI assessment</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="recommendations" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-md border-white/20">
-          <TabsTrigger value="recommendations" className="text-white data-[state=active]:bg-white/20">
-            AI Recommendations
-          </TabsTrigger>
-          <TabsTrigger value="alerts" className="text-white data-[state=active]:bg-white/20">
-            Weather Alerts
-          </TabsTrigger>
-          <TabsTrigger value="analysis" className="text-white data-[state=active]:bg-white/20">
-            Market Analysis
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="recommendations" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {recommendations.map((rec) => (
-              <Card key={rec.id} className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{rec.contract}</CardTitle>
-                      <CardDescription className="text-white/60">{rec.strategy}</CardDescription>
-                    </div>
-                    <Badge className={getActionColor(rec.action)}>{rec.action}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-white/60">Current Price</p>
-                      <p className="font-medium">{formatPrice(rec.currentPrice)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-white/60">Target Price</p>
-                      <p className="font-medium">{formatPrice(rec.targetPrice)}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-white/60">Confidence</p>
-                      <p className="font-medium text-green-400">{rec.confidence}%</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-white/60">Risk Level</p>
-                      <p className={`font-medium ${getRiskColor(rec.riskLevel)}`}>{rec.riskLevel}</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-white/60 mb-1">AI Reasoning</p>
-                    <p className="text-sm text-white/80">{rec.reasoning}</p>
-                  </div>
-
-                  <div className="flex justify-between text-xs text-white/60">
-                    <span>Timeframe: {rec.timeframe}</span>
-                    <span>Updated: {lastUpdated.toLocaleTimeString()}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="alerts" className="space-y-6">
-          <div className="space-y-4">
-            {weatherAlerts.map((alert) => (
-              <Card key={alert.id} className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0">
-                      {alert.type === "drought" && <Droplets className="h-6 w-6 text-yellow-400" />}
-                      {alert.type === "temperature" && <ThermometerSun className="h-6 w-6 text-red-400" />}
-                      {alert.type === "precipitation" && <AlertTriangle className="h-6 w-6 text-blue-400" />}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-lg">{alert.title}</h3>
-                        <Badge
-                          variant="secondary"
-                          className={
-                            alert.severity === "HIGH"
-                              ? "bg-red-600"
-                              : alert.severity === "MEDIUM"
-                                ? "bg-yellow-600"
-                                : "bg-green-600"
-                          }
-                        >
-                          {alert.severity}
-                        </Badge>
-                      </div>
-                      <p className="text-white/80 mb-3">{alert.description}</p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs text-white/60 mb-1">Region</p>
-                          <p className="text-sm font-medium">{alert.region}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-white/60 mb-1">Market Impact</p>
-                          <p className="text-sm font-medium text-green-400">{alert.impact}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="analysis" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-green-400" />
-                  Bullish Signals
-                </CardTitle>
-                <CardDescription className="text-white/60">Factors supporting price increases</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <p className="text-sm">Drought severity increasing in key agricultural regions</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <p className="text-sm">Reservoir levels 15% below seasonal averages</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <p className="text-sm">Institutional buying activity increased 23%</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <p className="text-sm">Climate models predict extended dry period</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-red-400" />
-                  Risk Factors
-                </CardTitle>
-                <CardDescription className="text-white/60">Potential downside risks to monitor</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                  <p className="text-sm">Regulatory changes in water allocation policies</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                  <p className="text-sm">Potential for unexpected precipitation events</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                  <p className="text-sm">Market volatility from speculative trading</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                  <p className="text-sm">Economic recession could reduce demand</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+      <div className="grid gap-4 lg:grid-cols-3">
+        {RECOMMENDATIONS.map((r) => (
+          <Card key={r.contract} className="glass">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-blue-400" />
-                AI Model Performance
-              </CardTitle>
-              <CardDescription className="text-white/60">Recent prediction accuracy and model insights</CardDescription>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-base">{r.contract}</CardTitle>
+                  <CardDescription>{r.strategy}</CardDescription>
+                </div>
+                <Badge className={actionColor[r.action]}>{r.action}</Badge>
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-400 mb-2">87.3%</div>
-                  <p className="text-sm text-white/60">30-day accuracy</p>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Current</p>
+                  <p className="font-medium">${r.current.toFixed(2)}</p>
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-400 mb-2">92.1%</div>
-                  <p className="text-sm text-white/60">7-day accuracy</p>
+                <div>
+                  <p className="text-xs text-muted-foreground">Target</p>
+                  <p className="font-medium">${r.target.toFixed(2)}</p>
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-yellow-400 mb-2">156</div>
-                  <p className="text-sm text-white/60">Data sources</p>
+                <div>
+                  <p className="text-xs text-muted-foreground">Confidence</p>
+                  <p className="font-medium text-success">{r.confidence}%</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Risk</p>
+                  <p className={`font-medium ${riskColor[r.risk]}`}>{r.risk}</p>
                 </div>
               </div>
-              <div className="mt-6 p-4 bg-blue-500/20 rounded-lg border border-blue-500/30">
-                <h4 className="font-medium text-blue-400 mb-2">Model Insights</h4>
-                <p className="text-sm text-white/80">
-                  Our AI combines satellite imagery, weather data, reservoir levels, and market sentiment to generate
-                  predictions. Recent improvements in drought pattern recognition have increased accuracy by 12% over
-                  the past quarter.
-                </p>
-              </div>
+              <p className="text-sm text-muted-foreground">{r.reasoning}</p>
+              <p className="text-xs text-muted-foreground">Timeframe: {r.timeframe}</p>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        ))}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="glass">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <TrendingUp className="h-4 w-4 text-success" />
+              Bullish Signals
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2.5">
+            {SIGNALS.bullish.map((s) => (
+              <div key={s} className="flex items-center gap-2.5 text-sm">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-success" />
+                {s}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="glass">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              Risk Factors
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2.5">
+            {SIGNALS.risks.map((s) => (
+              <div key={s} className="flex items-center gap-2.5 text-sm">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
+                {s}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="glass">
+        <CardContent className="flex items-start gap-3 py-4 text-sm text-muted-foreground">
+          <CloudRain className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <p>
+            Signals are derived from a model trained on 497 weekly NQH2O observations and 85+ GRIDMET drought
+            indicators (2018–2025). See the notebook in <code>research/notebooks</code> for the full pipeline.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   )
 }
