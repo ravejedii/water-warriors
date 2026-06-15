@@ -46,7 +46,7 @@ mobile and desktop, type-safe, and honest about what's demo vs. live.
 | 💸 **Drought subsidies** | USDC transfers on Ethereum Sepolia via Crossmint, with subsidy rates that scale to drought severity. |
 | 🛰️ **Futures analysis** | Trading signals derived from a drought-prediction ML pipeline (NQH2O index + GRIDMET indicators). |
 | 🎚️ **Demo / Live modes** | Transparent demo data by default; bring-your-own-key to go live, with a clear status indicator. |
-| 📱 **Responsive + themed** | Works on phone and desktop, with light and dark themes. |
+| 📱 **Responsive + crafted** | A polished "Deep Ocean" dark UI that works on phone and desktop. |
 
 <p align="center">
   <img src="docs/screenshots/mobile-trading.png" alt="Mobile view" width="32%" />
