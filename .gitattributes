@@ -1,0 +1,3 @@
+# Exclude research notebooks from GitHub language stats so the repo is
+# identified as the TypeScript / Next.js app it is, not "Jupyter Notebook".
+*.ipynb linguist-documentation
