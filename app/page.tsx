@@ -70,7 +70,7 @@ export default function Home() {
       </main>
 
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-      <ChatBot droughtLevel={droughtLevel} />
+      <ChatBot droughtLevel={droughtLevel} onConnectKeys={() => setSettingsOpen(true)} />
     </div>
   )
 }

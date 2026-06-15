@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton"
 import { AreaChart } from "@/components/ui/area-chart"
 import { useCredentials } from "@/lib/credentials"
-import type { AlpacaAccount, AlpacaOrder, AlpacaPosition } from "@/lib/demo-data"
+import { WATER_TICKERS, type AlpacaAccount, type AlpacaOrder, type AlpacaPosition } from "@/lib/demo-data"
 
 const currency = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n)
 
@@ -127,7 +127,12 @@ export default function TradingDashboard() {
               {positions.map((p) => (
                 <Row key={p.symbol}>
                   <div>
-                    <p className="font-medium">{p.symbol}</p>
+                    <p className="font-medium">
+                      {p.symbol}
+                      {WATER_TICKERS[p.symbol] && (
+                        <span className="ml-2 text-sm font-normal text-muted-foreground">{WATER_TICKERS[p.symbol]}</span>
+                      )}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {p.qty} shares · {p.side}
                     </p>
@@ -175,6 +180,7 @@ export default function TradingDashboard() {
                         {o.side} {o.qty} {o.symbol}
                       </p>
                       <p className="text-sm text-muted-foreground">
+                        {WATER_TICKERS[o.symbol] ? `${WATER_TICKERS[o.symbol]} · ` : ""}
                         {o.order_type}
                         {o.filled_avg_price ? ` · @ ${currency(o.filled_avg_price)}` : ""}
                       </p>

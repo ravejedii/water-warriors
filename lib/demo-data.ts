@@ -68,6 +68,7 @@ export const demoAccount: AlpacaAccount = {
 export const demoPositions: AlpacaPosition[] = [
   { symbol: "AWK", qty: 18, market_value: 2487.6, unrealized_pl: 142.3, side: "long" },
   { symbol: "XYL", qty: 25, market_value: 3210.5, unrealized_pl: -64.75, side: "long" },
+  { symbol: "WTRG", qty: 60, market_value: 2274.0, unrealized_pl: 119.4, side: "long" },
   { symbol: "PHO", qty: 40, market_value: 1986.0, unrealized_pl: 88.2, side: "long" },
 ]
 
@@ -143,15 +144,26 @@ export const demoCrossmintEvents: CrossmintEvent[] = [
   },
 ]
 
-/** Map of friendly company names to ticker symbols used by the chat agent. */
+/** Friendly water-company names → ticker symbols, used by the chat agent. */
 export const SYMBOL_ALIASES: Record<string, string> = {
-  TESLA: "TSLA",
-  AMAZON: "AMZN",
-  APPLE: "AAPL",
-  MICROSOFT: "MSFT",
-  GOOGLE: "GOOGL",
-  META: "META",
-  NETFLIX: "NFLX",
+  "AMERICAN WATER": "AWK",
+  XYLEM: "XYL",
+  "ESSENTIAL UTILITIES": "WTRG",
+  "AMERICAN STATES WATER": "AWR",
+  "CALIFORNIA WATER": "CWT",
+  VEOLIA: "VEOEY",
+  "INVESCO WATER": "PHO",
+}
+
+/** Display names for the water-sector tickers used across the app. */
+export const WATER_TICKERS: Record<string, string> = {
+  AWK: "American Water Works",
+  XYL: "Xylem Inc.",
+  WTRG: "Essential Utilities",
+  PHO: "Invesco Water Resources ETF",
+  AWR: "American States Water",
+  CWT: "California Water Service",
+  VEOEY: "Veolia Environnement",
 }
 
 export const SUBSIDY_RATES = { high: 0.75, medium: 0.5, low: 0.25 } as const

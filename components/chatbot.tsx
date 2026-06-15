@@ -2,12 +2,22 @@
 
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
-import { Bot, Loader2, MessageCircle, Send, User, X } from "lucide-react"
+import { Bot, KeyRound, Loader2, MessageCircle, Send, Sparkles, User, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Logo } from "@/components/logo"
 import { cn } from "@/lib/utils"
 import { useCredentials } from "@/lib/credentials"
+
+const MODE_CHOSEN_KEY = "wfa.chatModeChosen"
 
 interface Message {
   id: string
@@ -24,13 +34,48 @@ const GREETING: Message = {
 
 const SUGGESTIONS = ["What are water futures?", "buy 5 AWK", "check my balance", "claim subsidy"]
 
-export default function ChatBot({ droughtLevel = "medium" }: { droughtLevel?: "high" | "medium" | "low" }) {
+export default function ChatBot({
+  droughtLevel = "medium",
+  onConnectKeys,
+}: {
+  droughtLevel?: "high" | "medium" | "low"
+  onConnectKeys?: () => void
+}) {
   const { headers, mode, hydrated } = useCredentials()
   const [open, setOpen] = useState(false)
+  const [modePrompt, setModePrompt] = useState(false)
   const [messages, setMessages] = useState<Message[]>([GREETING])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // On first open in demo mode, ask whether to stay in demo or connect live keys.
+  const openChat = () => {
+    setOpen(true)
+    if (mode === "demo") {
+      let chosen = false
+      try {
+        chosen = Boolean(localStorage.getItem(MODE_CHOSEN_KEY))
+      } catch {
+        /* ignore */
+      }
+      if (!chosen) setModePrompt(true)
+    }
+  }
+
+  const rememberChoice = () => {
+    try {
+      localStorage.setItem(MODE_CHOSEN_KEY, "1")
+    } catch {
+      /* ignore */
+    }
+    setModePrompt(false)
+  }
+
+  const chooseLive = () => {
+    rememberChoice()
+    onConnectKeys?.()
+  }
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
@@ -76,7 +121,7 @@ export default function ChatBot({ droughtLevel = "medium" }: { droughtLevel?: "h
     <>
       {/* Floating launcher */}
       <Button
-        onClick={() => setOpen(true)}
+        onClick={openChat}
         size="lg"
         className={cn(
           "fixed bottom-5 right-5 z-40 h-14 rounded-full px-5 shadow-lg shadow-primary/30 transition-transform hover:scale-105",
@@ -184,6 +229,51 @@ export default function ChatBot({ droughtLevel = "medium" }: { droughtLevel?: "h
           </div>
         </div>
       )}
+
+      {/* First-run: choose demo vs. live data */}
+      <Dialog open={modePrompt} onOpenChange={setModePrompt}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              How would you like to run?
+            </DialogTitle>
+            <DialogDescription>
+              You're in demo mode — the assistant and data use realistic samples. Switch to live mode to chat with a
+              real Claude model and connect your own trading and blockchain accounts.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              onClick={rememberChoice}
+              className="rounded-xl border border-border p-4 text-left transition-colors hover:border-primary/40"
+            >
+              <p className="flex items-center gap-2 font-medium">
+                <Bot className="h-4 w-4 text-muted-foreground" />
+                Stay in demo
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">Explore everything with sample data. No keys needed.</p>
+            </button>
+            <button
+              onClick={chooseLive}
+              className="glow rounded-xl border border-primary/50 bg-primary/10 p-4 text-left transition-colors hover:bg-primary/15"
+            >
+              <p className="flex items-center gap-2 font-medium">
+                <KeyRound className="h-4 w-4 text-primary" />
+                Go live
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">Add your API keys to use real AI, trading, and USDC.</p>
+            </button>
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={rememberChoice}>
+              Maybe later
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
