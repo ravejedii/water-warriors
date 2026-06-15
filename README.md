@@ -11,7 +11,7 @@
 [![Claude](https://img.shields.io/badge/AI-Claude-D97757)](https://www.anthropic.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](./LICENSE)
 
-**[▶ Live Demo](https://v0-water-futures.vercel.app)**  ·  [Features](#-features)  ·  [Architecture](#-architecture)  ·  [Run locally](#-run-locally)
+**[▶ Live Demo](https://v0-water-warriors.vercel.app)**  ·  [Features](#-features)  ·  [Architecture](#-architecture)  ·  [Run locally](#-run-locally)
 
 </div>
 
