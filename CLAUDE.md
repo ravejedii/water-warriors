@@ -10,6 +10,8 @@ demonstrates AI-assisted water-scarcity risk management: water-sector trading
 an illustrative futures-analysis view backed by an ML notebook, and a
 Claude-powered assistant. Styling is Tailwind CSS v4 with shadcn/ui primitives.
 
+**Live:** https://v0-water-warriors.vercel.app (deployed from `main` on Vercel).
+
 ## Core design: Demo Mode + Bring-Your-Own-Key (BYOK)
 
 This is the most important concept in the codebase. The app is fully usable with
