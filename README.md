@@ -68,6 +68,10 @@ per-request header (your key, in-browser)  →  server env var  →  built-in de
 
 This means the public demo always looks complete to a visitor, while remaining honest and secure.
 
+<p align="center">
+  <img src="docs/screenshots/desktop-settings.png" alt="Bring-your-own-key settings" width="70%" />
+</p>
+
 ## 🏗️ Architecture
 
 ```

@@ -2,9 +2,10 @@
 
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
-import { Bot, Loader2, MessageCircle, Send, Sparkles, User, X } from "lucide-react"
+import { Bot, Loader2, MessageCircle, Send, User, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Logo } from "@/components/logo"
 import { cn } from "@/lib/utils"
 import { useCredentials } from "@/lib/credentials"
 
@@ -101,8 +102,8 @@ export default function ChatBot({ droughtLevel = "medium" }: { droughtLevel?: "h
         <div className="glass fixed inset-y-0 right-0 z-50 flex w-full flex-col shadow-2xl duration-200 animate-in slide-in-from-right sm:m-3 sm:w-[400px] sm:rounded-2xl">
           <header className="flex items-center justify-between border-b border-border px-4 py-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary">
-                <Sparkles className="h-4 w-4" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 p-1.5">
+                <Logo />
               </div>
               <div>
                 <p className="text-sm font-semibold leading-tight">AI Assistant</p>

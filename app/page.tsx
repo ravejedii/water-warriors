@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useTheme } from "next-themes"
-import { DollarSign, Droplets, LineChart, Moon, Settings, Sun, TrendingUp } from "lucide-react"
+import { useState } from "react"
+import { DollarSign, LineChart, Settings, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { Wordmark } from "@/components/logo"
 import { DemoBanner, ModeBadge } from "@/components/mode-banner"
 import { SettingsDialog } from "@/components/settings-dialog"
 import ChatBot from "@/components/chatbot"
@@ -21,67 +21,41 @@ const TABS: { id: TabId; label: string; icon: typeof TrendingUp }[] = [
   { id: "futures", label: "Futures", icon: LineChart },
 ]
 
-function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      aria-label="Toggle theme"
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-    >
-      {mounted && resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-    </Button>
-  )
-}
-
 export default function Home() {
   const [tab, setTab] = useState<TabId>("trading")
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [droughtLevel, setDroughtLevel] = useState<DroughtLevel>("medium")
 
   return (
-    <div className="app-shell min-h-dvh">
-      {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Droplets className="h-5 w-5" />
-            </div>
-            <div className="leading-tight">
-              <p className="font-semibold">Water Futures AI</p>
-              <p className="hidden text-xs text-muted-foreground sm:block">AI-powered water risk management</p>
-            </div>
-          </div>
+    <div className="min-h-dvh">
+      <div className="bg-fx" />
 
-          <div className="flex items-center gap-2">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
+          <Wordmark />
+          <div className="flex items-center gap-1.5">
             <ModeBadge />
             <Button variant="ghost" size="icon" aria-label="Settings" onClick={() => setSettingsOpen(true)}>
               <Settings className="h-4 w-4" />
             </Button>
-            <ThemeToggle />
           </div>
         </div>
 
-        {/* Tab navigation */}
-        <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 pb-px">
+        <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-3">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
               className={cn(
-                "flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
-                tab === t.id
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground",
+                "relative flex items-center gap-2 whitespace-nowrap px-4 py-3 text-sm font-medium transition-colors",
+                tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground",
               )}
             >
               <t.icon className="h-4 w-4" />
               {t.label}
+              {tab === t.id && (
+                <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-primary shadow-[0_0_12px_var(--primary)]" />
+              )}
             </button>
           ))}
         </nav>
@@ -89,7 +63,7 @@ export default function Home() {
 
       <DemoBanner onOpenSettings={() => setSettingsOpen(true)} />
 
-      <main className="mx-auto max-w-6xl px-4 py-6 pb-24">
+      <main className="mx-auto max-w-6xl px-4 py-7 pb-28">
         {tab === "trading" && <TradingDashboard />}
         {tab === "subsidy" && <GovernmentSubsidy droughtLevel={droughtLevel} setDroughtLevel={setDroughtLevel} />}
         {tab === "futures" && <FuturesRecommendations />}

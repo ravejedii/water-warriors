@@ -1,16 +1,19 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Activity, DollarSign, RefreshCw, TrendingDown, TrendingUp, Wallet } from "lucide-react"
+import { Activity, ArrowDownRight, ArrowUpRight, RefreshCw, TrendingDown, TrendingUp } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AreaChart } from "@/components/ui/area-chart"
 import { useCredentials } from "@/lib/credentials"
 import type { AlpacaAccount, AlpacaOrder, AlpacaPosition } from "@/lib/demo-data"
 
-const currency = (n: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n)
+const currency = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n)
+
+// Illustrative equity-curve shape (the chart self-normalizes; values aren't a live series).
+const TREND = [0.42, 0.45, 0.4, 0.5, 0.47, 0.55, 0.52, 0.61, 0.57, 0.65, 0.62, 0.71, 0.68, 0.66, 0.75, 0.73, 0.82, 0.79, 0.86, 0.83, 0.91, 0.88, 0.96, 1]
 
 export default function TradingDashboard() {
   const { headers, hydrated } = useCredentials()
@@ -47,29 +50,20 @@ export default function TradingDashboard() {
     if (hydrated) load()
   }, [hydrated, load])
 
-  const stats = [
-    { label: "Portfolio Value", value: account ? currency(account.portfolio_value) : "—", icon: TrendingUp, hint: "Total account value" },
-    { label: "Cash", value: account ? currency(account.cash) : "—", icon: DollarSign, hint: "Available to trade" },
-    { label: "Buying Power", value: account ? currency(account.buying_power) : "—", icon: Wallet, hint: "Incl. margin" },
-  ]
+  const dayPL = account ? account.equity - account.last_equity : 0
+  const dayPLPct = account && account.last_equity ? (dayPL / account.last_equity) * 100 : 0
+  const up = dayPL >= 0
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Trading Dashboard</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Water-sector equities via the Alpaca paper-trading API.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={demo ? "secondary" : "default"}>{demo ? "Demo data" : "Live · Alpaca"}</Badge>
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-            <RefreshCw className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
-            Refresh
-          </Button>
-        </div>
-      </div>
+      <Header
+        title="Trading Dashboard"
+        subtitle="Water-sector equities via the Alpaca paper-trading API."
+        demo={demo}
+        live="Live · Alpaca"
+        loading={loading}
+        onRefresh={load}
+      />
 
       {error && (
         <Card className="border-destructive/40 bg-destructive/10">
@@ -79,24 +73,48 @@ export default function TradingDashboard() {
         </Card>
       )}
 
+      {/* Hero: portfolio value + trend */}
+      <Card className="glass glow overflow-hidden">
+        <CardContent className="grid gap-6 p-6 md:grid-cols-[1fr_1.4fr] md:items-center">
+          <div>
+            <p className="text-sm text-muted-foreground">Portfolio Value</p>
+            {loading ? (
+              <Skeleton className="mt-2 h-11 w-48" />
+            ) : (
+              <p className="mt-1 font-display text-4xl font-bold tracking-tight text-gradient">
+                {account ? currency(account.portfolio_value) : "—"}
+              </p>
+            )}
+            <div className="mt-3 flex items-center gap-2 text-sm">
+              <span
+                className={
+                  up
+                    ? "inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 font-medium text-success"
+                    : "inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 font-medium text-destructive"
+                }
+              >
+                {up ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
+                {up ? "+" : ""}
+                {currency(dayPL)} ({dayPLPct.toFixed(2)}%)
+              </span>
+              <span className="text-muted-foreground">today</span>
+            </div>
+          </div>
+          <div className="-mb-2">
+            <AreaChart data={TREND} height={140} />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 sm:grid-cols-3">
-        {stats.map((s) => (
-          <Card key={s.label} className="glass">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
-              <s.icon className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              {loading ? <Skeleton className="h-8 w-32" /> : <div className="text-2xl font-bold">{s.value}</div>}
-              <p className="mt-1 text-xs text-muted-foreground">{s.hint}</p>
-            </CardContent>
-          </Card>
-        ))}
+        <Stat label="Cash" value={account ? currency(account.cash) : "—"} hint="Available to trade" loading={loading} />
+        <Stat label="Buying Power" value={account ? currency(account.buying_power) : "—"} hint="Incl. margin" loading={loading} />
+        <Stat label="Equity" value={account ? currency(account.equity) : "—"} hint="Marked to market" loading={loading} />
       </div>
 
       <Card className="glass">
         <CardHeader>
-          <CardTitle>Current Positions</CardTitle>
+          <CardTitle className="text-base">Current Positions</CardTitle>
           <CardDescription>Open positions in your account.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -107,7 +125,7 @@ export default function TradingDashboard() {
           ) : (
             <div className="space-y-2">
               {positions.map((p) => (
-                <div key={p.symbol} className="flex items-center justify-between rounded-lg bg-muted/40 p-3">
+                <Row key={p.symbol}>
                   <div>
                     <p className="font-medium">{p.symbol}</p>
                     <p className="text-sm text-muted-foreground">
@@ -121,7 +139,7 @@ export default function TradingDashboard() {
                       {currency(p.unrealized_pl)}
                     </p>
                   </div>
-                </div>
+                </Row>
               ))}
             </div>
           )}
@@ -130,7 +148,7 @@ export default function TradingDashboard() {
 
       <Card className="glass">
         <CardHeader>
-          <CardTitle>Recent Orders</CardTitle>
+          <CardTitle className="text-base">Recent Orders</CardTitle>
           <CardDescription>Latest activity from the trading account.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -141,13 +159,17 @@ export default function TradingDashboard() {
           ) : (
             <div className="space-y-2">
               {orders.map((o) => (
-                <div key={o.id} className="flex items-center justify-between rounded-lg bg-muted/40 p-3">
+                <Row key={o.id}>
                   <div className="flex items-center gap-3">
-                    {o.side === "buy" ? (
-                      <TrendingUp className="h-4 w-4 text-success" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 text-destructive" />
-                    )}
+                    <div
+                      className={
+                        o.side === "buy"
+                          ? "flex h-9 w-9 items-center justify-center rounded-full bg-success/12 text-success"
+                          : "flex h-9 w-9 items-center justify-center rounded-full bg-destructive/12 text-destructive"
+                      }
+                    >
+                      {o.side === "buy" ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                    </div>
                     <div>
                       <p className="font-medium capitalize">
                         {o.side} {o.qty} {o.symbol}
@@ -166,12 +188,67 @@ export default function TradingDashboard() {
                       {new Date(o.filled_at || o.created_at).toLocaleDateString()}
                     </p>
                   </div>
-                </div>
+                </Row>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+    </div>
+  )
+}
+
+export function Header({
+  title,
+  subtitle,
+  demo,
+  live,
+  loading,
+  onRefresh,
+  extra,
+}: {
+  title: string
+  subtitle: string
+  demo: boolean
+  live: string
+  loading: boolean
+  onRefresh: () => void
+  extra?: React.ReactNode
+}) {
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h2 className="font-display text-2xl font-bold tracking-tight">{title}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        {extra}
+        <Badge variant={demo ? "secondary" : "default"}>{demo ? "Demo data" : live}</Badge>
+        <Button variant="outline" size="sm" onClick={onRefresh} disabled={loading}>
+          <RefreshCw className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+          Refresh
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function Stat({ label, value, hint, loading }: { label: string; value: string; hint: string; loading: boolean }) {
+  return (
+    <Card className="glass transition-transform duration-200 hover:-translate-y-0.5">
+      <CardContent className="p-5">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        {loading ? <Skeleton className="mt-2 h-7 w-28" /> : <p className="mt-1 font-display text-2xl font-semibold">{value}</p>}
+        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+function Row({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-border/60 bg-background/30 p-3 transition-colors hover:border-primary/30">
+      {children}
     </div>
   )
 }

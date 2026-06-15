@@ -1,8 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import { ThemeProvider } from "@/components/theme-provider"
+import "@fontsource-variable/inter"
+import "@fontsource-variable/space-grotesk"
 import { CredentialsProvider } from "@/lib/credentials"
 import "./globals.css"
 
@@ -16,11 +15,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable}`}>
-      <body className="font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <CredentialsProvider>{children}</CredentialsProvider>
-        </ThemeProvider>
+    <html lang="en" className="dark">
+      <body className="antialiased">
+        <CredentialsProvider>{children}</CredentialsProvider>
       </body>
     </html>
   )

@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { ArrowDownLeft, ArrowUpRight, CloudRain, DollarSign, RefreshCw, Send, Wallet } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Header } from "@/components/trading-dashboard"
 import { useCredentials } from "@/lib/credentials"
 import { DEMO_WALLETS, SUBSIDY_RATES, type CrossmintEvent, type DroughtLevel } from "@/lib/demo-data"
 
@@ -83,21 +83,14 @@ export default function GovernmentSubsidy({ droughtLevel, setDroughtLevel }: Pro
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Government Subsidies</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Drought-based USDC payments on Ethereum Sepolia via Crossmint.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={demo ? "secondary" : "default"}>{demo ? "Demo data" : "Live · Crossmint"}</Badge>
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-            <RefreshCw className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
-            Refresh
-          </Button>
-        </div>
-      </div>
+      <Header
+        title="Government Subsidies"
+        subtitle="Drought-based USDC payments on Ethereum Sepolia via Crossmint."
+        demo={demo}
+        live="Live · Crossmint"
+        loading={loading}
+        onRefresh={load}
+      />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="glass">

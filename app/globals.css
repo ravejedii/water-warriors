@@ -4,82 +4,52 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
-  Water Futures AI — refined aquatic theme.
-  Semantic tokens drive both light and dark modes; the brand palette centers on
-  teal/cyan over deep ocean-blue surfaces.
+  Water Futures AI — "Deep Ocean" identity.
+  A single, intentional dark theme: ink-navy canvas, frosted-glass panels with
+  gradient hairline edges, one electric-aqua accent, fine grain, and soft glow.
+  Display type: Space Grotesk. Body type: Inter.
 */
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.875rem;
 
-  --background: oklch(0.98 0.01 220);
-  --foreground: oklch(0.21 0.03 250);
+  --background: oklch(0.17 0.03 256);
+  --foreground: oklch(0.96 0.012 230);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.03 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.03 250);
+  --card: oklch(0.225 0.032 254);
+  --card-foreground: oklch(0.96 0.012 230);
+  --popover: oklch(0.2 0.03 254);
+  --popover-foreground: oklch(0.96 0.012 230);
 
-  --primary: oklch(0.58 0.12 215);
-  --primary-foreground: oklch(0.99 0.01 220);
-  --secondary: oklch(0.95 0.02 220);
-  --secondary-foreground: oklch(0.3 0.04 240);
-  --muted: oklch(0.96 0.01 220);
-  --muted-foreground: oklch(0.52 0.03 240);
-  --accent: oklch(0.9 0.05 200);
-  --accent-foreground: oklch(0.3 0.04 240);
+  --primary: oklch(0.85 0.15 184);
+  --primary-foreground: oklch(0.19 0.04 240);
+  --secondary: oklch(0.29 0.03 252);
+  --secondary-foreground: oklch(0.95 0.012 230);
+  --muted: oklch(0.27 0.025 252);
+  --muted-foreground: oklch(0.72 0.025 235);
+  --accent: oklch(0.33 0.05 230);
+  --accent-foreground: oklch(0.96 0.012 230);
 
-  --success: oklch(0.6 0.14 160);
-  --warning: oklch(0.75 0.15 75);
-  --destructive: oklch(0.58 0.22 25);
-  --destructive-foreground: oklch(0.99 0.01 220);
+  --success: oklch(0.83 0.16 168);
+  --warning: oklch(0.83 0.15 88);
+  --destructive: oklch(0.7 0.18 22);
+  --destructive-foreground: oklch(0.98 0.01 230);
 
-  --border: oklch(0.9 0.01 230);
-  --input: oklch(0.9 0.01 230);
-  --ring: oklch(0.58 0.12 215);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.85 0.15 184);
 
-  --chart-1: oklch(0.58 0.12 215);
-  --chart-2: oklch(0.6 0.14 160);
-  --chart-3: oklch(0.65 0.15 250);
-  --chart-4: oklch(0.75 0.15 75);
-  --chart-5: oklch(0.6 0.18 300);
-}
-
-.dark {
-  --background: oklch(0.2 0.03 245);
-  --foreground: oklch(0.95 0.01 220);
-
-  --card: oklch(0.25 0.03 245);
-  --card-foreground: oklch(0.95 0.01 220);
-  --popover: oklch(0.23 0.03 245);
-  --popover-foreground: oklch(0.95 0.01 220);
-
-  --primary: oklch(0.72 0.13 200);
-  --primary-foreground: oklch(0.18 0.03 245);
-  --secondary: oklch(0.32 0.03 245);
-  --secondary-foreground: oklch(0.95 0.01 220);
-  --muted: oklch(0.3 0.03 245);
-  --muted-foreground: oklch(0.72 0.02 225);
-  --accent: oklch(0.35 0.05 220);
-  --accent-foreground: oklch(0.95 0.01 220);
-
-  --success: oklch(0.72 0.14 160);
-  --warning: oklch(0.8 0.15 80);
-  --destructive: oklch(0.66 0.2 25);
-  --destructive-foreground: oklch(0.98 0.01 220);
-
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.72 0.13 200);
-
-  --chart-1: oklch(0.72 0.13 200);
-  --chart-2: oklch(0.72 0.14 160);
-  --chart-3: oklch(0.7 0.15 255);
-  --chart-4: oklch(0.8 0.15 80);
-  --chart-5: oklch(0.7 0.16 300);
+  --chart-1: oklch(0.85 0.15 184);
+  --chart-2: oklch(0.83 0.16 168);
+  --chart-3: oklch(0.68 0.15 258);
+  --chart-4: oklch(0.83 0.15 88);
+  --chart-5: oklch(0.7 0.17 305);
 }
 
 @theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk Variable', 'Inter Variable', sans-serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -118,20 +88,73 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
     min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
   }
 }
 
-/* Ambient ocean gradient behind the whole app. */
-.app-shell {
+/* Fixed background: layered aqua/indigo glow + subtle film grain, behind content. */
+.bg-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background:
-    radial-gradient(60rem 60rem at 80% -10%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 60%),
-    radial-gradient(50rem 50rem at -10% 10%, color-mix(in oklab, var(--chart-3) 18%, transparent), transparent 55%);
+    radial-gradient(55rem 42rem at 88% -8%, color-mix(in oklab, var(--primary) 16%, transparent), transparent 60%),
+    radial-gradient(48rem 48rem at -8% 4%, color-mix(in oklab, var(--chart-3) 16%, transparent), transparent 55%),
+    radial-gradient(40rem 30rem at 50% 120%, color-mix(in oklab, var(--chart-2) 8%, transparent), transparent 60%),
+    var(--background);
+}
+.bg-fx::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Frosted-glass surface used by cards and panels. */
+/*
+  Frosted-glass panel with a gradient hairline edge.
+  The edge is painted with the background-clip border trick (no positioned
+  pseudo-element) so the class composes cleanly with `fixed`/`absolute`.
+*/
 .glass {
-  background: color-mix(in oklab, var(--card) 70%, transparent);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
+  background:
+    linear-gradient(
+      color-mix(in oklab, var(--card) 62%, transparent),
+      color-mix(in oklab, var(--card) 62%, transparent)
+    ) padding-box,
+    linear-gradient(
+      140deg,
+      color-mix(in oklab, var(--primary) 45%, transparent),
+      transparent 40%,
+      color-mix(in oklab, var(--chart-3) 26%, transparent)
+    ) border-box;
+  border: 1px solid transparent;
+  backdrop-filter: blur(14px) saturate(140%);
 }
+
+/* Aqua glow for emphasis (hero stat, primary actions). */
+.glow {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 20%, transparent),
+    0 8px 40px -12px color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
+.text-gradient {
+  background: linear-gradient(120deg, var(--foreground), color-mix(in oklab, var(--primary) 80%, var(--foreground)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.animate-float { animation: float-slow 6s ease-in-out infinite; }

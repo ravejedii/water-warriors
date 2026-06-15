@@ -3,6 +3,10 @@
 import { AlertTriangle, BarChart3, Brain, CloudRain, Droplets, ThermometerSun, TrendingUp } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { AreaChart } from "@/components/ui/area-chart"
+
+// Illustrative NQH2O index path (self-normalizing chart; not live market data).
+const PRICE_TREND = [410, 422, 418, 435, 448, 442, 460, 475, 470, 488, 502, 498, 512, 505, 520, 535]
 
 /*
   This view illustrates how the ML pipeline (see research/notebooks) surfaces
@@ -101,6 +105,22 @@ export default function FuturesRecommendations() {
         </div>
         <Badge variant="secondary">Illustrative sample</Badge>
       </div>
+
+      <Card className="glass glow overflow-hidden">
+        <CardContent className="grid gap-6 p-6 md:grid-cols-[1fr_1.5fr] md:items-center">
+          <div>
+            <p className="text-sm text-muted-foreground">NQH2O Water Index</p>
+            <p className="mt-1 font-display text-4xl font-bold tracking-tight text-gradient">$535.25</p>
+            <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-sm font-medium text-success">
+              <TrendingUp className="h-3.5 w-3.5" /> +30.5% YTD
+            </p>
+            <p className="mt-3 text-xs text-muted-foreground">Modeled trend from the drought-prediction pipeline.</p>
+          </div>
+          <div className="-mb-2">
+            <AreaChart data={PRICE_TREND} height={150} />
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {MARKET.map((m) => (
